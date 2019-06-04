@@ -1,4 +1,5 @@
 # Crime-analysis
+For the best view (html dependencies - datatable and leaflet libraries) please download Crime_analysis_project.html file and have a look in your browser.
 ### New York crime data
 ### Kaggle original data
 www.kaggle.com/adamschroeder/crimes-new-york-city/version/1# <br>
@@ -9,4 +10,3 @@ Data visualization <br>
 Basic statistics <br>
 Association rules <br>
 Hotspots detection - DBSCAN clustering<br><br>
-To see html presentation and city maps for hotspots, please download Crime_analysis_project.html file
