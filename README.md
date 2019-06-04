@@ -1,8 +1,8 @@
 # Crime-analysis
 ### New York crime data
 ### Kaggle original data
-**Crime analysis.ipynb**
 www.kaggle.com/adamschroeder/crimes-new-york-city/version/1# <br>
+See **Crime analysis.ipynb** <br>
 Data mining course - Mathematics and computer science department<br>
 R programming language <br><br>
 Data visualization <br>
