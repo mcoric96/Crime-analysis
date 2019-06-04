@@ -1,0 +1,358 @@
+---
+title: "Crime analysis"
+output:
+   rmarkdown::github_document
+---
+
+### Introduction
+This project is made for purpose of Data mining course - Mathematics and Computer science department <br>
+Original data from Kaggle: https://www.kaggle.com/adamschroeder/crimes-new-york-city/version/1 <br>
+Data : New York crime data <br>
+Objective : extraction of knowledge related to crimes from dataset <br>
+General purpose of this project is not classic classification of regression problems, but finding out important features of crime nature in New York.
+
+### Software
+R programming language (version 3.6.0) <br>
+RStudio <br>
+Jupyter Notebook
+
+### R Libraries
+
+```{r}
+library(dplyr)
+library(ggplot2)
+library(DT)
+library(arules)
+```
+
+### Data
+
+```{r}
+crimeData = read.csv(file = "./CrimeData.csv",header = T,sep = ',')
+crimeData[sample(x = 1:1048575,size = 15),] # a brief look at the data
+```
+
+There is a difference beetwen this data and original from Kaggle. <br>
+Simple preprocessing is made and some variables(date event was reported,police jurisdiction...) are ejected, some are changed(date variable to month, day and year, hours and minutes to time...) and some are added(dayPart) due to simplicity.
+Variables "hours" and "minutes" are joined into 1 continuous variable time - for instance:
+15h 30min is now 15.5  (15 + 30/60). <br>
+Variable "time" is divided into categorical variable "dayPart" with 4 classes(parts of the day). <br>
+All NA's are replaced with "MISSING_VALUE"
+
+```{r}
+summary(crimeData)
+```
+
+### Data visualization
+The most crimes generally occur in Brooklyn while least number of crimes occur in Staten Island.
+
+```{r}
+options(repr.plot.width=7, repr.plot.height=5)
+ggplot(data = crimeData) + geom_bar(mapping = aes(x = crimeData$Borough,color = Borough))+
+xlab("New York boroughs") + ylab("Num. of crimes")
+```
+
+Distribution of "offense level" variable <br>
+Misdemeanor offense dominate over felony and violation.
+```{r}
+options(repr.plot.width=5, repr.plot.height=5)
+ggplot(data = crimeData) + geom_bar(mapping = aes(x = crimeData$offenseLevel)) + xlab("Offense level")
+```
+
+## Simple correlations in data
+Connection beetwen New York borough and offense level for newer data(2012-2015)
+```{r}
+options(repr.plot.width=7, repr.plot.height=3)
+subset(crimeData,year >= 2012) %>% count(Borough , offenseLevel) %>% 
+ggplot(mapping = aes(x = Borough , y = offenseLevel)) + 
+geom_tile(mapping = aes(fill = n))
+```
+
+Distribution of each offense level through the day. <br>
+It is clear that second part of the day (17-21) is the time when most crimes of each level occur and the morning is the part of the day with less crime appearances.
+```{r}
+options(repr.plot.width=12, repr.plot.height=5)
+ggplot(crimeData , mapping = aes(x = time,colour = offenseLevel))+ 
+geom_freqpoly(binwidth = 0.9 , lwd = 1) + xlab("Time of the day")+ylab('Distribution')
+```
+
+This trend don't change over time. <br>
+The similar pattern occur if one smaller subset(44% of data) of data is taken 
+(only crimes from last year - 2015)
+```{r}
+options(repr.plot.width=9, repr.plot.height=5)
+subset(crimeData,year == 2015) %>%
+ggplot(mapping = aes(x = time,colour = offenseLevel))+geom_freqpoly(binwidth = 0.85 , lwd = 1) + 
+xlab("Time of the day")+ylab('Distribution')
+```
+
+2014 year
+```{r}
+options(repr.plot.width=9, repr.plot.height=5)
+subset(crimeData,year == 2014) %>%
+ggplot(mapping = aes(x = time,colour = offenseLevel))+geom_freqpoly(binwidth = 0.85 , lwd = 1) + 
+xlab("Time of the day")+ylab('Distribution')
+```
+
+Relation beetwen New York boroughs, offense level and time. <br>
+Crime offense levels mostly don't depend on borough but on time od the day.
+```{r}
+options(repr.plot.width=10, repr.plot.height=7)
+qplot(data = subset(crimeData,year >= 2012) ,color =Borough, x = time , bins = 25 , ylab = "Distribution through time") + facet_grid(Borough~offenseLevel)
+```
+
+Offense level vs. crime location <br>
+Inside crimes are dominant independently of crime level.
+```{r}
+qplot(data = subset(crimeData,year >= 2013) , x = occurenceLocation,xlab = "Location of crime")+
+facet_grid(.~offenseLevel) + coord_flip()
+```
+
+### How to get some new information - simple example
+One of the main tasks of data mining is extraction new data and information from the old one.
+Here is a very simple example of getting day of the week from a given date.
+```{r}
+crimeData[15] <- crimeData[,c(3,2,1)] %>% apply(MARGIN = 1,
+FUN = function(vec){paste(vec,collapse = '-')}) %>% as.Date() %>% weekdays()
+names(crimeData)[15] <- 'weekDay'
+```
+
+### Day of the week vs. time (year 2014 and 2015)
+As it can be seen, the most dangerous time of the week is weekend night(saturday and sunday 22-06) and middle of the week through the day, while the less dangerous is the middle of the week at night and weekend mornings. 
+For this and similar analysis, the idea is to track new trends that might happen and for that reason newer data should be taken for analysis(in this case last 2 years).
+```{r}
+subset(crimeData,!is.na(weekDay) & year >= 2014) %>% count(weekDay , dayPart) %>% 
+ggplot(mapping = aes(x = weekDay , y = dayPart)) + geom_tile(mapping = aes(fill = n))+
+xlab("Day of the week") + ylab("Part of the day")
+```
+
+### Some things happen more often than the others - interactive data tables
+For this kind of analysis DT(data-table) library is used - simple review of particular desired events. <br>
+From this data-tables it is easy to observe what events are more frequent than the others.
+```{r}
+subset(crimeData,year >= 2014 & occurenceLocation != "MISSING_VALUE") %>% 
+group_by(offenseDescription,Borough,dayPart,premiseDescription) %>% summarize(count = n()) %>% 
+arrange(desc(count)) %>% head(20) %>% datatable(options = list(pageLength = 10,scrollX='400px'))
+```
+
+```{r}
+subset(crimeData,year >= 2014 & occurenceLocation != "MISSING_VALUE") %>% 
+group_by(occurenceLocation,Borough,dayPart,pdDescription) %>% summarize(count = n()) %>% 
+arrange(desc(count)) %>% head(20) %>% datatable(options = list(pageLength = 10,scrollX='400px'))
+```
+
+### Felony
+2015 felony related crimes - small pattern emerges. <br>
+The most dangerous place for this specific category is Brooklyn - 12 h, at beginning of the week. The same pattern come up for 2014 year.
+```{r}
+subset(crimeData,year == 2015 & offenseLevel == "FELONY") %>% group_by(Borough,time,weekDay) %>% summarise(count = n()) %>% 
+arrange(desc(count)) %>% head(30) %>% datatable(options = list(pageLength = 10,scrollX='400px'))
+```
+
+## Association rules
+Association rules are rule-based data mining method for discovering certain relations between variables in data-sets. The main purpose of association rules is to discover strong rules in data-sets using measures of interestingness. <br> Let $I=\{i_1,...,i_n\}$ be the set of variables in the dataset. Observations of data-set (rows of data frame) are usually called **transactions**.
+A rule is defined like implication $A \implies B$ where $A,B \subset I$.<br> $A$ is usually called antecedent or left-hand-side (LHS) and $Y$ consequent or right-hand-side (RHS).
+In some implementations rule is defined like $A \implies i_j$ where $i_j \in I$.
+
+### Significant measures
+Let $X,Y$ be itemsets, $X \implies Y$ an association rule and $T$ a set of transactions of a given data-set.
+
+### Support
+
+Support is an indication of how frequently the itemset appears in the dataset. <br>
+It is proportion of transactions(rows in data frame) that contain specific itemset, with respect to number of transactions. <br>
+$supp(X) = \frac{|t \in T ; X \subset t|}{|T|}$ <br>
+
+### Confidence
+
+Confidence is an indication of how often the rule has been found to be true.<br>
+$conf(X \cup Y) = \frac{supp(X \cup Y)}{supp(X)}$ <br>
+Confidence can be interpreted as an estimate of the conditional probability $P(Y|X)$, the probability of finding the $Y$ in transactions under the condition that these transactions also contain the $X$ in the left side of the rule.
+
+### The lift
+
+The lift of a rule is defined as $lift(X \implies Y) = \frac{supp(X \cup Y)}{supp(X) * supp(Y)}$<br>
+It is the ratio of the observed support to that expected if X and Y were independent events. <br> If $X$ and $Y$ are truly independent events, we can expect that about $supp(X) * supp(Y)$ number of transactions will contain both of them. <br>
+If the rule had a **lift of 1**, it would imply that the probability of occurrence of the antecedent and that of the consequent are independent of each other. When two events are independent of each other, no rule can be drawn involving those two events. <br>
+If the **lift is > 1**, that lets us know the degree to which those two occurrences are dependent on one another, and makes those rules potentially useful for predicting the consequent in future data sets.<br>
+If the **lift is < 1**, that lets us know the items are substitute to each other. This means that presence of one item has negative effect on presence of other item and vice versa. <br><br>
+Definitons taken from : https://en.wikipedia.org/wiki/Association_rule_learning <br>
+R implementation: library arules , apriori algorithm.<br><br>
+
+### Example - wrong way of using association rules
+One of the obvious wrong ways of using of association rules is to apply it to variables that are obviously correlated in some way. In this dataset for instance we could get rule like: <br>
+offenseDescription = ASSAULT_AND_RELATED_OFFENSES $\implies$ pdDescription = ASSAULT. It is clear and natural that these 2 variables are in close relationship, so although this rule might have large lift, is not very helpfull. For this reason in examples below algorithm will take only some subset of variables, excluding others that are obviously correlated with them.<br><br>
+
+### Apriori algorithm
+Apriori algorithm is classic algorithm for generating association rules from datasets or databases.<br>
+The key idea of the algorithm is to begin by generating frequent itemsets with just one item (1-itemsets) and to recursively generate frequent itemsets with 2 items, then frequent 3-itemsets and so on till some stopping condition is satisfied. <br> 
+This is where computational complexity comes into the game. <br>
+Apriori algorithm is based on very simple observation: **subsets of frequent itemsets are also frequent itemsets**. In other words , if some itemset is proven to be non-frequent , then it will not be considered by algorithm any more for forming new frequent itemsets. To identify the k-itemsets that are not frequent algorithm need to examine all subsets of size (k-1) of each candidate k-itemset.<br>
+It generates candidate itemsets of length k from item sets of length k-1. Then it prunes the candidates which have an infrequent sub-pattern.
+
+```{r}
+rules <- apriori(data = subset(crimeData,year >= 2013)[,-c(1,2,3,6,7,8,9,10,11,14)] , 
+parameter = list(support = 0.03 , confidence = 0.6,maxlen = 5,target = 'rules'))
+inspect(sort(rules,by='lift'))
+```
+In the example above, the first couple of rules have the lift that is slightly greater than 1 which means there might be light correlation between these itemsets. On the other hand, this might be because value "INSIDE" (1st rule) for occurenceLocation is dominating over the other values of occurenceLocation. <br>
+Intuitive way of interpreting this rule is something like "when crime belongs to the level VIOLATION, it is slightly more likely that it happened INSIDE than then somewhere else". <br>
+However, confidence of this rule could be somewhat better so we can't accept that this is strong connection between these 2 variables although lift implies some dependence.
+
+### Trying to detect what is the cause of rare events
+From summary table it is clear that most crimes have value COMPLETED for category crimeCompleted, much less number of crimes are registered as just ATTEMPTED. Association rules could allow us to find some specific moments that imply this rare events. <br>
+Although lift is really high for these events, their count is small(2-3) and these are not indicators of any kind of correlation with ATTEMPTED value.
+```{r}
+rules <- apriori(data = subset(crimeData,year >= 2011)[,c(4,5,9,11,14)] , 
+parameter = list(support = 0.000001 , confidence = 0.85,maxlen = 5),
+appearance = list(rhs = c('crimeCompleted=ATTEMPTED')))
+inspect(head(sort(rules,by='lift'),10))
+```
+
+Greater count implies that we need to sacrifice confidence. <br>
+Left-hand side of these rules with great lift value, contains some specific events like explicit part of the day when "KIDNAPPING_AND_RELATED_OFFENSES" crimes happend on the street.
+```{r}
+rules <- apriori(data = subset(crimeData,year >= 2013)[,c(4,5,9,11,14)] , 
+parameter = list(support = 0.00001 , confidence = 0.55,maxlen = 5),
+appearance = list(rhs = c('crimeCompleted=ATTEMPTED')))
+inspect(head(sort(rules,by='lift'),10))
+```
+
+Association rules allow us to discover nature of serious crimes, like burglary and larceny (for 2015 year). <br>
+Rules with higher lift and confidence are good candidates for better research because they imply that there might be some connection between certain variables in this subset of data.
+```{r}
+rules <- apriori(data = subset(crimeData,year == 2015)[,c(4,5,9,11,14,15)] , 
+parameter = list(support = 0.00001 , confidence = 0.7,maxlen = 5,target='rules'),
+appearance = list(rhs = c('offenseDescription=BURGLARY')))
+inspect(head(sort(rules,by='count'),10))
+```
+```{r}
+rules <- apriori(data = subset(crimeData,year == 2015)[,c(4,5,9,11,14,15)] , 
+parameter = list(support = 0.00001 , confidence = 0.75,maxlen = 5,target='rules'),
+appearance = list(rhs = c('offenseDescription=GRAND_LARCENY')))
+inspect(head(sort(rules,by='count'),10))
+```
+
+## Hotspots detection
+
+Crime hotspots are parts of the city that have high crime intensity. <br>
+Motivation for crime hotspot analysis is detecting crime hotspots for focusing police forces on potential residence of criminal activity.
+Analyzing crime locations and information associated with them is one of fundamental tasks of every crime analysis.
+This kind of analysis is significant bacause it can easily reveal that risk of being a victim of certain type of crime is not always geographically constant. <br>
+Crime pattern theory implies that generally crime is not random. The first definition suggests that clustering crimes based on density should be right way to go.
+```{r}
+library(dbscan)
+library(ggmap)
+library(leaflet)
+# Citation:
+citation("ggmap")
+```
+
+## DBSCAN algorithm
+
+For purpose of detecting crime hotspots it is appropriate to use DBSCAN(density-based spatial clustering of applications with noise) clustering algorithm. For a given a set of points in space, it groups together points that are closely packed together(nearby neigbors). <br>
+Source: https://en.wikipedia.org/wiki/DBSCAN 
+
+### Simple example
+
+Murders in Bronx in period 2014 and 2015
+```{r}
+data = subset(crimeData, year >= 2014 & Borough == "BRONX" & 
+offenseDescription == "MURDER_AND_NON_NEGL_MANSLAUGHTER" & !is.na(Longitude) &
+!is.na(Latitude))[,c(7,8)] 
+options(repr.plot.width=9, repr.plot.height=7)
+leaflet() %>% addTiles() %>% addCircleMarkers(lng=data$Longitude, lat=data$Latitude)
+```
+
+```{r}
+options(repr.plot.width=8, repr.plot.height=7) # possible hotspot
+clust = dbscan(x = data,eps = 0.01,minPts = 20,borderPoints = F)
+leaflet() %>% addTiles() %>% 
+addCircleMarkers(lng=data$Longitude[which(clust$cluster==1)], lat=data$Latitude[which(clust$cluster==1)])
+```
+
+### Robberies in Queens (2015)
+Although crime hotspots can be found relatively easy with DBSCAN, they might be very natural because of greater density of population in that places(not visible from this data). <br>
+Great density of population might imply greater density of some specific crime level.
+```{r}
+options(repr.plot.width=8, repr.plot.height=8)
+data <- subset(crimeData, year >= 2015 & month>=10 & Borough == "QUEENS" & 
+offenseDescription == "ROBBERY" & !is.na(Longitude) & !is.na(Latitude))[,c(7,8)]
+leaflet() %>% addTiles() %>% addCircleMarkers(lng=data$Longitude, lat=data$Latitude)
+```
+
+
+```{r}
+clust = dbscan(x = data,eps = 0.0095,minPts = 35,borderPoints = F)
+leaflet() %>% addTiles() %>% 
+addCircleMarkers(lng=data$Longitude[which(clust$cluster>=1)], lat=data$Latitude[which(clust$cluster>=1)])
+```
+
+In example above DBSCAN algorithm found few clusters that could represent possible hotspots for certain level of crime. <br>
+However, there are other methods for searching hotspots, like test for clustering. Testing for clustering is the first step in revealing whether data has crime hotspots.
+
+## Nearest neighbor index (NNI)
+NNI is a very simple and quick method to test evidence of clustering. <br>
+This test compares the actual distribution of crime data against a data set of the same size, but with random distribution. <br>
+The test has following steps: <br>
+First, calculate observed average nearest neighbor distance (for every point, find it's closest neighbor and calculate their distance, then average all those distances). <br>
+Do the same thing for random distribution of the same size - average random nearest neighbor distance.
+NNI is the ratio of the observed average nearest neighbor distance against the average random nearest neighbor distance.<br>
+If the result generated from the NNI test is 1, then the crime data are randomly distributed.<br>
+If the NNI is less than 1, then the crime data show some evidence of clustering.<br>
+An NNI that is greater than 1 reveals evidence of a uniform pattern in crime data. 
+
+## Z-score test statistics
+A z-score test statistic can be applied to gain confidence in the NNI result. This test of statistical significance describes how different the actual average nearest neighbor distance is from the average random nearest neighbor distance. <br>
+General principle is that the more negative the z-score, the more confidence can be placed in the NNI result.
+
+### Example
+In the example above it is easy to find NNI which is about 0.62 which means this should be the evidence that clustering is not just a coincidence.
+
+```{r}
+library(spatialEco) # library for NNI statistics
+library(sp)
+```
+```{r}
+subset(crimeData, year >= 2015 & month>=10 & Borough == "QUEENS" & 
+offenseDescription == "ROBBERY" & !is.na(Longitude) & !is.na(Latitude))[,c(7,8)] %>%
+SpatialPoints() %>% nni(win = 'hull')
+```
+
+## Crime oportunity - vehicle crimes
+Some places have great oportunity for vehicle crimes
+```{r}
+options(repr.plot.width=8, repr.plot.height=5)
+data = subset(crimeData,year >= 2014 & Borough == "STATEN_ISLAND" & offenseDescription == "VEHICLE_AND_TRAFFIC_LAWS" & 
+!is.na(Longitude) & !is.na(Latitude))[,c(7,8)]
+leaflet() %>% addTiles() %>% addCircleMarkers(lng=data$Longitude, lat=data$Latitude)
+```
+```{r}
+clust = dbscan(x = data,eps = 0.02,minPts = 45,borderPoints = F)
+leaflet() %>% addTiles() %>% addCircleMarkers(lng=data$Longitude[which(clust$cluster>=1)], lat=data$Latitude[which(clust$cluster>=1)])
+nni(SpatialPoints(data))
+```
+
+## Dangerous drugs hotspots
+Hotspot analysis can be very simple and suitable method for prevention of selling drugs. <br>
+It might be the answer on the question "Where the most amount of drugs are being sold or consumed?".
+```{r}
+options(repr.plot.width=8, repr.plot.height=8)
+data = subset(crimeData, year >= 2015 & month>=10 & Borough == "BRONX" & 
+offenseDescription == "DANGEROUS_DRUGS" & !is.na(Longitude) & !is.na(Latitude))[,c(7,8)]
+leaflet() %>% addTiles() %>% addCircleMarkers(lng=data$Longitude, lat=data$Latitude)
+```
+```{r}
+clust = dbscan(x = data,eps = 0.0035,minPts = 60,borderPoints = F)
+leaflet() %>% addTiles() %>% addCircleMarkers(lng=data$Longitude[which(clust$cluster>=1)], lat=data$Latitude[which(clust$cluster>=1)])
+nni(SpatialPoints(data))
+```
+
+## Conclusion
+
+Crime is one of inevitable parts of today's civilization, especially in greater areas and cities.
+In last few decades, due to development of new tehnologies and numerous number of statistical researches, scientists and researchers developed advanced statistical concepts that are very useful for crime analysis and prevention. <br>
+Through the years these analyses showed that generally crime is not random, there are certain causes of these events that can be understood and predicted to some measure. <br>
+Even simple statisical analysis and tests can reveal correlations in data that are not visible and obvious at first sight.<br>
+The question that rises up after any kind of crime analysis and prevention is, will those attempts of prevention stop some amount of crime to happen in some places, but cause the same type of crimes to occur in different places.<br>
+For example, hotspot analysis can reveal drug-hotspots and police actually manage to repress that kind of crimes, but after a while crimes related to drugs start to occur in some other places, forming new hotspots that did not exist before.
