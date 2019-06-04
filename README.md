@@ -2,7 +2,7 @@
 ### New York crime data
 ### Kaggle original data
 www.kaggle.com/adamschroeder/crimes-new-york-city/version/1# <br>
-Data mining course <br>
+Data mining course - Mathematics and computer science department<br>
 R programming language <br><br>
 Data visualization <br>
 Basic statistics <br>
