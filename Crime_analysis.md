@@ -277,7 +277,7 @@ xlab("Time of the day")+ylab('Distribution')
 
 ![](Crime_analysis_project_github_files/figure-markdown_github/unnamed-chunk-9-1.png)
 
-Relation beetwen New York boroughs, offense level and time. <br> Crime offense levels mostly don't depend on borough but on time od the day.
+Relation beetwen New York boroughs, offense level and time. <br> Crime offense levels mostly don't depend on borough but on time of the day.
 
 ``` r
 options(repr.plot.width=10, repr.plot.height=7)
