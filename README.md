@@ -1,5 +1,6 @@
 # Crime-analysis
-For the best view (html dependencies - datatable and leaflet libraries) please download **Crime_analysis_project.html** file and have a look in your browser.
+For the best view (html dependencies - datatable and leaflet libraries) please download **Crime_analysis_project.html** file and have a look in your browser. <br>
+General purpose of this project is exatraction of knowledge related to crimes in this data and finding important feautures of crime in New York.
 ## New York crime data
 date/time of crime, Latitude/Longitude, NewYork borough, location, crime description, offense level, premise description
 ## Kaggle original data
