@@ -23,4 +23,6 @@ Data visualization <br>
 Basic statistics <br>
 Association rules - support, confidence, lift, Apriori algorithm<br>
 Hotspots detection - DBSCAN clustering<br>
-Nearest neighbor index - z test statistics<br>
+Nearest neighbor index - z test statistics<br><br>
+
+## Preview
