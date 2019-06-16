@@ -1,4 +1,4 @@
-![Preview](https://www.google.hr/search?hl=hr&tbm=isch&source=hp&biw=1366&bih=657&ei=WC4GXfb9M4-7UJaaufgE&q=crime+analysis&oq=crime+ana&gs_l=img.3.1.0i19l10.605.2218..4185...0.0..0.406.2148.0j4j2j2j1......0....1..gws-wiz-img.....0..0j0i30.38XuLSgea0s#imgrc=FrfVPlhl_0ZlqM:)
+![img](https://www.google.hr/url?sa=i&source=images&cd=&ved=2ahUKEwji-vzT-e3iAhXPLVAKHXNTCjUQjRx6BAgBEAU&url=https%3A%2F%2Fwww.gsps.ca%2Fen%2Fcrimefiles%2Fcrimeanalysis.asp&psig=AOvVaw3Vz37HwYwxsy_VK4VxTHxD&ust=1560772575297433)
 # Crime-analysis
 For the best view (html dependencies - datatable and leaflet libraries) please download **Crime_analysis_project.html** file and have a look in your browser. <br>
 General purpose of this project is exatraction of knowledge related to crimes in this data and finding important feautures of crime in New York.
