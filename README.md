@@ -30,10 +30,12 @@ Nearest neighbor index - z test statistics<br><br>
 <p align="center">
   <img src="https://github.com/mcoric96/Crime-analysis/blob/master/Crime_analysis_project_github_files/figure-markdown_github/unnamed-chunk-10-1.png?raw=true">
 </p>
+<br>
 ### Crime events
 <p align="center">
   <img src="https://github.com/mcoric96/Crime-analysis/blob/master/Crime_analysis_project_files/crime-events.PNG">
 </p>
+<br>
 ### Vehicle crimes
 <p align="center">
   <img src="https://github.com/mcoric96/Crime-analysis/blob/master/Crime_analysis_project_files/vehicle-crimes.PNG">
