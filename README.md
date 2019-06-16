@@ -26,17 +26,17 @@ Hotspots detection - DBSCAN clustering<br>
 Nearest neighbor index - z test statistics<br><br>
 
 ## Preview
-### Distribution of crimes in different boroughs
+**Distribution of crimes in different boroughs**
 <p align="center">
   <img src="https://github.com/mcoric96/Crime-analysis/blob/master/Crime_analysis_project_github_files/figure-markdown_github/unnamed-chunk-10-1.png?raw=true">
 </p>
 <br>
-### Crime events
+**Crime events**
 <p align="center">
   <img src="https://github.com/mcoric96/Crime-analysis/blob/master/Crime_analysis_project_files/crime-events.PNG?raw=true">
 </p>
 <br>
-### Vehicle crimes
+**Vehicle crimes**
 <p align="center">
-  <img src="https://github.com/mcoric96/Crime-analysis/blob/master/Crime_analysis_project_files/vehicle-crimes.PNG">
+  <img src="https://github.com/mcoric96/Crime-analysis/blob/master/Crime_analysis_project_files/vehicle-crimes.PNG?raw=true">
 </p>
