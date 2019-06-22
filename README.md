@@ -48,7 +48,7 @@ Nearest neighbor index - z test statistics<br><br>
 
 <br>
 
-**Vehicle crimes**
+**Vehicle crimes - mapping crimes**
 <p align="center">
   <img src="https://github.com/mcoric96/Crime-analysis/blob/master/Crime_analysis_project_files/vehicle-crimes.PNG?raw=true">
 </p>
