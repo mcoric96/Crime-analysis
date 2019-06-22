@@ -40,12 +40,14 @@ Nearest neighbor index - z test statistics<br><br>
 </p>
 
 <br>
+
 **Association rules**
 <p align="center">
   <img src="https://github.com/mcoric96/Crime-analysis/blob/master/Crime_analysis_project_files/association_rules.PNG?raw=true">
 </p>
 
 <br>
+
 **Vehicle crimes**
 <p align="center">
   <img src="https://github.com/mcoric96/Crime-analysis/blob/master/Crime_analysis_project_files/vehicle-crimes.PNG?raw=true">
